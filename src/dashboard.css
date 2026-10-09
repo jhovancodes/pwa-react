@@ -30,19 +30,6 @@
 }
 
 
-.dashboard-page *,
-.form-page {
-    min-height: 100vh;
-    width: 100%;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    padding: 30px;
-    box-sizing: border-box;
-}
-
 .dashboard-page {
 
     padding:

@@ -166,116 +166,52 @@ function Dashboard() {
                 )}
 
 
-                {students.length === 0 ? (
-
+                {students.length === 0 && (
                     <p className="empty-message">
                         No students have been added yet.
                     </p>
-
-                ) : (
-
-                    <div className="table-wrapper">
-
-                        <table>
-
-                            <thead>
-
-                                <tr>
-
-                                    <th>Name</th>
-
-                                    <th>Email</th>
-
-                                    <th>Phone</th>
-
-                                    <th>Address</th>
-
-                                    <th>Actions</th>
-
-                                </tr>
-
-                            </thead>
-
-
-                            <tbody>
-
-                                {students.map(
-                                    (student) => (
-
-                                        <tr
-                                            key={
-                                                student.id
-                                            }
-                                        >
-
-                                            <td>
-                                                {
-                                                    student.name
-                                                }
-                                            </td>
-
-                                            <td>
-                                                {
-                                                    student.email
-                                                }
-                                            </td>
-
-                                            <td>
-                                                {
-                                                    student.phone
-                                                }
-                                            </td>
-
-                                            <td>
-                                                {
-                                                    student.address
-                                                }
-                                            </td>
-
-                                            <td>
-
-                                                <div className="action-buttons">
-
-                                                    <Link
-                                                        className="btn-edit"
-                                                        to={
-                                                            `/edit?id=${encodeURIComponent(
-                                                                student.id
-                                                            )}`
-                                                        }
-                                                    >
-                                                        Edit
-                                                    </Link>
-
-
-                                                    <button
-                                                        className="btn-delete"
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                student
-                                                            )
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </button>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-
-                                    )
-                                )}
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
                 )}
+
+                <div className="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {students.map((student) => (
+                                <tr key={student.id}>
+                                    <td>{student.name}</td>
+                                    <td>{student.email}</td>
+                                    <td>{student.phone}</td>
+                                    <td>{student.address}</td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            <Link
+                                                className="btn-edit"
+                                                to={`/edit?id=${encodeURIComponent(student.id)}`}
+                                            >
+                                                Edit
+                                            </Link>
+                                            <button
+                                                className="btn-delete"
+                                                type="button"
+                                                onClick={() => handleDelete(student)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
 
             </div>
 
