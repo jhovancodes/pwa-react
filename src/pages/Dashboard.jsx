@@ -1,170 +1,105 @@
-import {
-    useEffect,
-    useState
-} from "react";
 
-import {
-    onAuthStateChanged
-} from "firebase/auth";
-
-import {
-    Link,
-    useNavigate
-} from "react-router-dom";
-
-import {
-    auth
-} from "../firebase/firebase";
-
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { Link, useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase/firebase";
 import "../dashboard.css";
 
-
 function Dashboard() {
-
     const navigate = useNavigate();
-
-    const [students, setStudents] =
-        useState([]);
-
-    const [message, setMessage] =
-        useState("");
-
+    const [students, setStudents] = useState([]);
+    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(true);
 
     function getStudents() {
-
         try {
+            const stored = JSON.parse(
+                localStorage.getItem("students") || "[]"
+            );
 
-            const stored =
-                JSON.parse(
-                    localStorage.getItem(
-                        "students"
-                    ) || "[]"
-                );
-
-
-            return Array.isArray(stored)
-                ? stored
-                : [];
-
+            return Array.isArray(stored) ? stored : [];
         } catch {
-
             return [];
-
         }
-
     }
-
 
     function loadStudents() {
-
-        setStudents(
-            getStudents()
-        );
-
+        setStudents(getStudents());
     }
-
 
     useEffect(() => {
+        let active = true;
 
-        const unsubscribe =
-            onAuthStateChanged(
-                auth,
-                (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                navigate("/login", { replace: true });
+                return;
+            }
 
-                    if (!user) {
+            try {
+                const snapshot = await getDoc(
+                    doc(db, "users", user.uid)
+                );
 
-                        navigate(
-                            "/login",
-                            {
-                                replace: true
-                            }
-                        );
+                if (!active) return;
 
-                        return;
-
-                    }
-
-
-                    loadStudents();
-
+                if (!snapshot.exists() || snapshot.data().role !== "admin") {
+                    navigate("/student-dashboard", { replace: true });
+                    return;
                 }
-            );
 
+                loadStudents();
+            } catch (error) {
+                console.error("Unable to verify admin role:", error);
 
-        return unsubscribe;
+                if (active) {
+                    navigate("/login", { replace: true });
+                }
+            } finally {
+                if (active) setLoading(false);
+            }
+        });
 
+        return () => {
+            active = false;
+            unsubscribe();
+        };
     }, [navigate]);
 
-
     function handleDelete(student) {
+        const confirmed = window.confirm(`Delete ${student.name}?`);
 
-        const confirmed =
-            window.confirm(
-                `Delete ${student.name}?`
-            );
+        if (!confirmed) return;
 
-
-        if (!confirmed) {
-
-            return;
-
-        }
-
-
-        const remaining =
-            students.filter(
-                (item) =>
-                    item.id !== student.id
-            );
-
-
-        localStorage.setItem(
-            "students",
-            JSON.stringify(
-                remaining
-            )
+        const remaining = students.filter(
+            (item) => item.id !== student.id
         );
 
-
-        setStudents(
-            remaining
-        );
-
-
-        setMessage(
-            "Student deleted."
-        );
-
+        localStorage.setItem("students", JSON.stringify(remaining));
+        setStudents(remaining);
+        setMessage("Student deleted.");
     }
 
+    if (loading) {
+        return <p>Checking admin access...</p>;
+    }
 
     return (
-
         <div className="dashboard-page">
-
             <div className="container">
+                <h2>Welcome, Admin!</h2>
+                <p>Manage your student records from your dashboard.</p>
 
-                <h1>
-                    Student List
-                </h1>
+                <h1>Student List</h1>
 
-
-                <Link
-                    className="add-student-link"
-                    to="/add"
-                >
+                <Link className="add-student-link" to="/add">
                     Add Student
                 </Link>
 
-
                 {message && (
-
-                    <p className="dashboard-message">
-                        {message}
-                    </p>
-
+                    <p className="dashboard-message">{message}</p>
                 )}
-
 
                 {students.length === 0 && (
                     <p className="empty-message">
@@ -212,14 +147,9 @@ function Dashboard() {
                         </tbody>
                     </table>
                 </div>
-
             </div>
-
         </div>
-
     );
-
 }
-
 
 export default Dashboard;

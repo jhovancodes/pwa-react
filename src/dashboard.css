@@ -587,3 +587,20 @@
     }
 
 }
+
+.student-dashboard .container > button {
+    background-color: #2563eb;
+    color: white;
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background-color 0.2s ease;
+}
+
+.student-dashboard .container > button:hover {
+    background-color: #1d4ed8;
+}
