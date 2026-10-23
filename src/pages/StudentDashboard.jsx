@@ -1,101 +1,119 @@
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../firebase/firebase";
+import {
+  collection,
+  onSnapshot
+} from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase/firebase";
 import "../dashboard.css";
 
 function StudentDashboard() {
-    const navigate = useNavigate();
-    const [students, setStudents] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        let active = true;
+  useEffect(() => {
+    let active = true;
+    let unsubscribeStudents = () => {};
 
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                navigate("/login", { replace: true });
-                return;
-            }
-
-            try {
-                const stored = JSON.parse(
-                    localStorage.getItem("students") || "[]"
-                );
-
-                if (active) {
-                    setStudents(Array.isArray(stored) ? stored : []);
-                }
-            } catch {
-                if (active) {
-                    setStudents([]);
-                }
-            } finally {
-                if (active) {
-                    setLoading(false);
-                }
-            }
-        });
-
-        return () => {
-            active = false;
-            unsubscribe();
-        };
-    }, [navigate]);
-
-    async function handleLogout() {
-        await signOut(auth);
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
         navigate("/login", { replace: true });
-    }
+        return;
+      }
 
-    if (loading) {
-        return <p>Loading student records...</p>;
-    }
+      unsubscribeStudents = onSnapshot(
+        collection(db, "students"),
+        (snapshot) => {
+          if (!active) return;
 
-    return (
-        <div className="dashboard-page student-dashboard">
-            <div className="container">
-                <h2>Hello, Student!</h2>
-                <p>Welcome! You can view the student records below.</p>
+          setStudents(
+            snapshot.docs.map((studentDoc) => ({
+              id: studentDoc.id,
+              ...studentDoc.data()
+            }))
+          );
 
-                <h1>Student List</h1>
+          setMessage("");
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Unable to load student records:", error);
 
-                <button type="button" onClick={handleLogout}>
-                    Logout
-                </button>
+          if (active) {
+            setMessage("Unable to load student records. Check your Firestore permissions.");
+            setLoading(false);
+          }
+        }
+      );
+    });
 
-                {students.length === 0 && (
-                    <p className="empty-message">
-                        No students have been added yet.
-                    </p>
-                )}
+    return () => {
+      active = false;
+      unsubscribeAuth();
+      unsubscribeStudents();
+    };
+  }, [navigate]);
 
-                <div className="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Address</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {students.map((student) => (
-                                <tr key={student.id}>
-                                    <td>{student.name}</td>
-                                    <td>{student.email}</td>
-                                    <td>{student.phone}</td>
-                                    <td>{student.address}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+  async function handleLogout() {
+    await signOut(auth);
+    navigate("/login", { replace: true });
+  }
+
+  if (loading) {
+    return <p>Loading student records...</p>;
+  }
+
+  return (
+    <div className="dashboard-page student-dashboard">
+      <div className="container">
+        <h2>Hello, Student!</h2>
+        <p>Welcome! You can view the student records below.</p>
+
+        <h1>Student List</h1>
+
+        <button type="button" onClick={handleLogout}>
+          Logout
+        </button>
+
+        {message && (
+          <p className="dashboard-message">{message}</p>
+        )}
+
+        {!message && students.length === 0 && (
+          <p className="empty-message">
+            No students have been added yet.
+          </p>
+        )}
+
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => (
+                <tr key={student.id}>
+                  <td>{student.name}</td>
+                  <td>{student.email}</td>
+                  <td>{student.phone}</td>
+                  <td>{student.address}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default StudentDashboard;
