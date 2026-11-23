@@ -109,7 +109,6 @@ function Dashboard() {
         <Link className="add-student-link" to="/add">
           Add Student
         </Link>
-
         {message && (
           <p className="dashboard-message">{message}</p>
         )}
@@ -143,7 +142,7 @@ function Dashboard() {
                       <Link
                         className="btn-edit"
                         to={`/edit?id=${encodeURIComponent(student.id)}`}
-                      >
+                        state={{ student }}>
                         Edit
                       </Link>
                       <button
