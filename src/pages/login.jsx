@@ -113,17 +113,15 @@ function Login() {
             );
 
             await redirectByRole(result.user);
-        } catch (error) {
-            console.error("Google login error:", error);
-
-            if (error.code === "auth/popup-blocked") {
-                setLoginMessage("Google login was blocked by your browser.");
-            } else if (error.code === "auth/popup-closed-by-user") {
-                setLoginMessage("Google login was cancelled.");
-            } else {
-                setLoginMessage("Unable to sign in. Check your account and Firestore permissions.");
+            } catch (error) {
+                console.error("Google login error:", error);
+                console.error("Error code:", error.code);
+                console.error("Error message:", error.message);
+4
+                setLoginMessage(
+                    `${error.code || "Error"}: ${error.message}`
+                );
             }
-        }
     }
 
     return (
