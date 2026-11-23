@@ -12,10 +12,13 @@ import Add from "./pages/add";
 import Edit from "./pages/edit";
 import ProtectedRoute from "./ProtectedRoute";
 import StudentDashboard from "./pages/StudentDashboard";
+import OfflineBanner from "./OfflineBanner";
 
 function App() {
   return (
     <BrowserRouter>
+      <OfflineBanner />
+
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
